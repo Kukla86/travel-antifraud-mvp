@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Antifraud Demo - Working Version</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .result.allow {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.review {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .result.block {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flags {
+            margin-top: 10px;
+        }
+        .flag {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .demo-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .demo-info h3 {
+            margin: 0 0 10px 0;
+            color: #0066cc;
+        }
+        .demo-info p {
+            margin: 5px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Travel Antifraud Demo</h1>
+        
+        <div class="demo-info">
+            <h3>📋 Demo Instructions</h3>
+            <p><strong>Test High Risk:</strong> Use email like "test@yopmail.com" or "user@10minutemail.com"</p>
+            <p><strong>Test Bot Detection:</strong> Fill form very quickly (under 5 seconds)</p>
+            <p><strong>Test Geo Mismatch:</strong> Use IP from one country, BIN from another</p>
+            <p><strong>Test Normal:</strong> Use real email like "john@gmail.com" and fill normally</p>
+        </div>
+
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+                <label for="cardNumber">Card Number *</label>
+                <input type="text" id="cardNumber" name="cardNumber" required placeholder="4111 1111 1111 1111">
+            </div>
+
+            <div class="form-group">
+                <label for="cardName">Cardholder Name *</label>
+                <input type="text" id="cardName" name="cardName" required placeholder="John Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="expiry">Expiry Date *</label>
+                <input type="text" id="expiry" name="expiry" required placeholder="12/25">
+            </div>
+
+            <div class="form-group">
+                <label for="cvv">CVV *</label>
+                <input type="text" id="cvv" name="cvv" required placeholder="123">
+            </div>
+
+            <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country">
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="RU">Russia</option>
+                    <option value="CN">China</option>
+                </select>
+            </div>
+
+            <button type="submit">Check Fraud Risk</button>
+        </form>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- Antifraud Script -->
+    <script>
+        // Простая версия antifraud скрипта
+        class AntifraudChecker {
+            constructor() {
+                this.startTime = Date.now();
+                this.mouseMoves = 0;
+                this.typingTimes = [];
+                this.firstClickTime = null;
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Mouse movement tracking
+                document.addEventListener('mousemove', () => {
+                    this.mouseMoves++;
+                });
+
+                // Typing speed tracking
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                        this.typingTimes.push(Date.now());
+                    }
+                });
+
+                // First click tracking
+                document.addEventListener('click', (e) => {
+                    if (!this.firstClickTime) {
+                        this.firstClickTime = Date.now();
+                    }
+                });
+            }
+
+            getDeviceInfo() {
+                return {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    screen: `${screen.width}x${screen.height}`,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                };
+            }
+
+            getTypingSpeed() {
+                if (this.typingTimes.length < 2) return 0;
+                const intervals = [];
+                for (let i = 1; i < this.typingTimes.length; i++) {
+                    intervals.push(this.typingTimes[i] - this.typingTimes[i-1]);
+                }
+                return intervals.reduce((a, b) => a + b, 0) / intervals.length;
+            }
+
+            async checkFraud(formData) {
+                const sessionDuration = Date.now() - this.startTime;
+                const typingSpeed = this.getTypingSpeed();
+                const firstClickDelay = this.firstClickTime ? this.firstClickTime - this.startTime : 0;
+
+                const payload = {
+                    email: formData.email,
+                    bin: formData.cardNumber.replace(/\s/g, '').substring(0, 6),
+                    user_agent: navigator.userAgent,
+                    ip: '8.8.8.8', // Demo IP
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    language: navigator.language,
+                    session_duration_ms: sessionDuration,
+                    typing_speed_ms_avg: typingSpeed,
+                    mouse_moves_count: this.mouseMoves,
+                    first_click_delay_ms: firstClickDelay,
+                    device_info: this.getDeviceInfo()
+                };
+
+                try {
+                    const response = await fetch('http://localhost:8000/api/check', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': 'antifraud_dev_key_2024'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error('Fraud check failed:', error);
+                    return {
+                        risk_score: 0,
+                        fraud_flags: [],
+                        recommendation: 'allow',
+                        check_id: null,
+                        error: error.message
+                    };
+                }
+            }
+        }
+
+        // Initialize antifraud checker
+        const antifraud = new AntifraudChecker();
+
+        // Form submission handler
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '🔄 Checking fraud risk...';
+            
+            try {
+                const result = await antifraud.checkFraud(data);
+                
+                // Display result
+                resultDiv.className = `result ${result.recommendation}`;
+                
+                let resultText = `Risk Score: ${result.risk_score}% - Recommendation: ${result.recommendation.toUpperCase()}`;
+                
+                if (result.fraud_flags && result.fraud_flags.length > 0) {
+                    resultText += '<div class="flags">';
+                    result.fraud_flags.forEach(flag => {
+                        resultText += `<span class="flag">${flag}</span>`;
+                    });
+                    resultText += '</div>';
+                }
+                
+                if (result.check_id) {
+                    resultText += `<br><small>Check ID: ${result.check_id}</small>`;
+                }
+                
+                if (result.error) {
+                    resultText += `<br><small style="color: red;">Error: ${result.error}</small>`;
+                }
+                
+                resultDiv.innerHTML = resultText;
+                
+            } catch (error) {
+                resultDiv.className = 'result block';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        });
+
+        // Demo data buttons
+        const demoButtons = document.createElement('div');
+        demoButtons.innerHTML = `
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                <h4>🎯 Quick Demo Tests:</h4>
+                <button type="button" onclick="fillForm('high')" style="background: #dc3545; margin-right: 10px;">High Risk Test</button>
+                <button type="button" onclick="fillForm('bot')" style="background: #ffc107; color: #000; margin-right: 10px;">Bot Test</button>
+                <button type="button" onclick="fillForm('normal')" style="background: #28a745; margin-right: 10px;">Normal Test</button>
+                <button type="button" onclick="fillForm('geo')" style="background: #17a2b8;">Geo Mismatch</button>
+            </div>
+        `;
+        document.querySelector('.container').appendChild(demoButtons);
+
+        // Demo data functions
+        window.fillForm = function(type) {
+            const form = document.getElementById('bookingForm');
+            
+            switch(type) {
+                case 'high':
+                    form.email.value = 'test@yopmail.com';
+                    form.cardNumber.value = '4111111111111111';
+                    form.cardName.value = 'Test User';
+                    form.expiry.value = '12/25';
+                    form.cvv.value = '123';
+                    form.country.value = 'US';
+                    break;
+                case 'bot':
+                    form.email.value = 'bot@example.com';
+                    form.cardNumber.value = '5555555555554444';
+                    form.cardName.value = 'Bot User';
+                    form.expiry.value = '12/25';
+                    form.cvv.value = '123';
+                    form.country.value = 'US';
+                    break;
+                case 'normal':
+                    form.email.value = 'john.doe@gmail.com';
+                    form.cardNumber.value = '4111111111111111';
+                    form.cardName.value = 'John Doe';
+                    form.expiry.value = '12/25';
+                    form.cvv.value = '123';
+                    form.country.value = 'US';
+                    break;
+                case 'geo':
+                    form.email.value = 'user@example.com';
+                    form.cardNumber.value = '4111111111111111'; // US BIN
+                    form.cardName.value = 'Test User';
+                    form.expiry.value = '12/25';
+                    form.cvv.value = '123';
+                    form.country.value = 'RU'; // Russian country
+                    break;
+            }
+        };
+    </script>
+</body>
+</html>

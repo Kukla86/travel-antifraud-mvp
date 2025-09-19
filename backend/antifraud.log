@@ -1,0 +1,18 @@
+{"timestamp": "2025-09-18T18:33:08.083141", "level": "INFO", "logger": "antifraud", "message": "Check started", "check_id": 0, "ip": "8.8.8.8", "email": "test@yopmail.com"}
+{"timestamp": "2025-09-18T18:33:08.402831", "level": "INFO", "logger": "antifraud.rules", "message": "Rule geo executed", "rule_name": "geo", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:33:08.403037", "level": "INFO", "logger": "antifraud.rules", "message": "Rule timezone executed", "rule_name": "timezone", "score_delta": 20, "fraud_flag": "timezone_mismatch"}
+{"timestamp": "2025-09-18T18:33:08.403310", "level": "INFO", "logger": "antifraud.rules", "message": "Rule email executed", "rule_name": "email", "score_delta": 25, "fraud_flag": "temporary_email"}
+{"timestamp": "2025-09-18T18:33:08.410526", "level": "INFO", "logger": "antifraud.rules", "message": "Rule velocity executed", "rule_name": "velocity", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:33:08.410692", "level": "INFO", "logger": "antifraud.rules", "message": "Rule bot executed", "rule_name": "bot", "score_delta": 20, "fraud_flag": "bot_like_activity"}
+{"timestamp": "2025-09-18T18:33:08.410839", "level": "INFO", "logger": "antifraud.rules", "message": "Rule device executed", "rule_name": "device", "score_delta": 10, "fraud_flag": "suspicious_device"}
+{"timestamp": "2025-09-18T18:33:08.411933", "level": "INFO", "logger": "antifraud.rules", "message": "Rule blacklist executed", "rule_name": "blacklist", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:33:08.423488", "level": "INFO", "logger": "antifraud", "message": "Check completed", "check_id": 2}
+{"timestamp": "2025-09-18T18:59:13.743889", "level": "INFO", "logger": "antifraud", "message": "Check started", "check_id": 0, "ip": "8.8.8.8", "email": "test@yopmail.com"}
+{"timestamp": "2025-09-18T18:59:14.073428", "level": "INFO", "logger": "antifraud.rules", "message": "Rule geo executed", "rule_name": "geo", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:59:14.073609", "level": "INFO", "logger": "antifraud.rules", "message": "Rule timezone executed", "rule_name": "timezone", "score_delta": 20, "fraud_flag": "timezone_mismatch"}
+{"timestamp": "2025-09-18T18:59:14.073712", "level": "INFO", "logger": "antifraud.rules", "message": "Rule email executed", "rule_name": "email", "score_delta": 25, "fraud_flag": "temporary_email"}
+{"timestamp": "2025-09-18T18:59:14.079284", "level": "INFO", "logger": "antifraud.rules", "message": "Rule velocity executed", "rule_name": "velocity", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:59:14.079468", "level": "INFO", "logger": "antifraud.rules", "message": "Rule bot executed", "rule_name": "bot", "score_delta": 20, "fraud_flag": "bot_like_activity"}
+{"timestamp": "2025-09-18T18:59:14.079619", "level": "INFO", "logger": "antifraud.rules", "message": "Rule device executed", "rule_name": "device", "score_delta": 10, "fraud_flag": "suspicious_device"}
+{"timestamp": "2025-09-18T18:59:14.081106", "level": "INFO", "logger": "antifraud.rules", "message": "Rule blacklist executed", "rule_name": "blacklist", "score_delta": 0, "fraud_flag": null}
+{"timestamp": "2025-09-18T18:59:14.094453", "level": "INFO", "logger": "antifraud", "message": "Check completed", "check_id": 1}

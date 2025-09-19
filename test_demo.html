@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Antifraud Test</title>
+</head>
+<body>
+    <h1>Testing Antifraud API</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': 'antifraud_dev_key_2024'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@yopmail.com',
+                        bin: '411111',
+                        user_agent: navigator.userAgent,
+                        ip: '8.8.8.8',
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        language: navigator.language,
+                        session_duration_ms: 1500,
+                        typing_speed_ms_avg: 30,
+                        mouse_moves_count: 0,
+                        first_click_delay_ms: 100,
+                        device_info: { platform: navigator.platform }
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3>✅ API Test Successful!</h3>
+                        <p><strong>Risk Score:</strong> ${data.risk_score}%</p>
+                        <p><strong>Recommendation:</strong> ${data.recommendation}</p>
+                        <p><strong>Flags:</strong> ${data.fraud_flags.join(', ')}</p>
+                        <p><strong>Check ID:</strong> ${data.check_id}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `❌ Error: ${response.status} - ${response.statusText}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
