@@ -20,7 +20,7 @@ from .rules.bot import check_bot_activity
 from .rules.device import check_device
 from .rules.blacklist import check_blacklist_ip
 from .rules.timezone import check_timezone_mismatch
-from .risk_score import aggregate_score_and_flags, recommendation_from_score
+from .risk_score import aggregate_score_and_flags, recommendation_from_score, calculate_ml_enhanced_score
 from pydantic import BaseModel
 
 # Настройка логирования
@@ -170,7 +170,24 @@ async def api_check(
         (blacklist_res.score_delta, blacklist_res.fraud_flag),
     ]
 
-    score, flags = aggregate_score_and_flags(parts)
+    # Подготавливаем данные для ML анализа
+    ml_data = {
+        'email': payload.email,
+        'bin': payload.bin,
+        'ip': payload.ip,
+        'userAgent': payload.user_agent,
+        'deviceInfo': payload.device_info,
+        'timezone': payload.timezone,
+        'language': payload.language,
+        'session_duration': payload.session_duration_ms / 1000 if payload.session_duration_ms else 0,
+        'typing_speed': payload.typing_speed_ms_avg,
+        'mouse_movements': payload.mouse_moves_count,
+        'first_click_time': payload.first_click_delay_ms / 1000 if payload.first_click_delay_ms else 0,
+        'geo_mismatch': geo_res.fraud_flag == "geo_mismatch"
+    }
+
+    # Используем ML-улучшенный расчет score
+    score, flags, ml_details = calculate_ml_enhanced_score(ml_data, parts)
     rec = recommendation_from_score(score)
 
     # Сохраняем лог
@@ -208,7 +225,23 @@ async def api_check(
             "flags": flags
         }))
 
-    return CheckResponse(risk_score=score, fraud_flags=flags, recommendation=rec, check_id=log.id)
+    # Подготавливаем расширенный ответ с ML деталями
+    response_data = {
+        "risk_score": score,
+        "fraud_flags": flags,
+        "recommendation": rec,
+        "check_id": log.id,
+        "ml_analysis": {
+            "base_score": ml_details.get('base_score', 0),
+            "ml_anomaly_score": ml_details.get('ml_anomaly_score', 0),
+            "behavioral_score": ml_details.get('behavioral_score', 0),
+            "total_score": ml_details.get('total_score', 0),
+            "anomalies": ml_details.get('ml_details', {}).get('anomalies', []),
+            "behavioral_analysis": ml_details.get('behavioral_details', {}).get('behavioral_analysis', {})
+        }
+    }
+    
+    return CheckResponse(**response_data)
 
 @app.get("/api/checks")
 def list_checks(

@@ -27,8 +27,18 @@ class RuleResult(BaseModel):
     details: Optional[Dict[str, Any]] = None
 
 
+class MLAnalysis(BaseModel):
+    base_score: int
+    ml_anomaly_score: int
+    behavioral_score: int
+    total_score: int
+    anomalies: List[Dict[str, Any]] = []
+    behavioral_analysis: Dict[str, Any] = {}
+
+
 class CheckResponse(BaseModel):
     risk_score: int
     fraud_flags: List[str]
     recommendation: str
     check_id: Optional[int] = None
+    ml_analysis: Optional[MLAnalysis] = None
