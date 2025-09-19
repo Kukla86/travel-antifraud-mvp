@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Antifraud Improvements</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: #fff; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #333; border-radius: 8px; }
+        .test-button { background: #007bff; color: white; padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #2a2a2a; border-radius: 4px; }
+        .high-risk { background: #dc3545; }
+        .medium-risk { background: #ffc107; color: #000; }
+        .low-risk { background: #28a745; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input { width: 300px; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #333; color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Antifraud Improvements</h1>
+    
+    <div class="test-section">
+        <h2>📧 Email Tests</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="email" placeholder="test@example.com">
+        </div>
+        <button class="test-button" onclick="testEmail()">Test Email</button>
+        <div id="email-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>💳 BIN Tests</h2>
+        <div class="form-group">
+            <label>BIN (6 digits):</label>
+            <input type="text" id="bin" placeholder="411111" maxlength="6">
+        </div>
+        <button class="test-button" onclick="testBin()">Test BIN</button>
+        <div id="bin-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌍 Geo Tests</h2>
+        <div class="form-group">
+            <label>IP Address:</label>
+            <input type="text" id="ip" placeholder="8.8.8.8">
+        </div>
+        <button class="test-button" onclick="testGeo()">Test Geo</button>
+        <div id="geo-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🖥️ Device Tests</h2>
+        <div class="form-group">
+            <label>User Agent:</label>
+            <input type="text" id="userAgent" placeholder="Mozilla/5.0...">
+        </div>
+        <button class="test-button" onclick="testDevice()">Test Device</button>
+        <div id="device-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Full Check</h2>
+        <button class="test-button" onclick="testFullCheck()">Test Full Check</button>
+        <div id="full-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const API_KEY = 'antifraud_dev_key_2024';
+
+        async function makeRequest(endpoint, data) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY
+                    },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        function displayResult(elementId, result, title) {
+            const element = document.getElementById(elementId);
+            if (result.error) {
+                element.innerHTML = `<strong>${title}:</strong> Error: ${result.error}`;
+                element.className = 'result high-risk';
+            } else {
+                const riskClass = result.risk_score > 70 ? 'high-risk' : 
+                                 result.risk_score > 30 ? 'medium-risk' : 'low-risk';
+                element.innerHTML = `
+                    <strong>${title}:</strong><br>
+                    Risk Score: ${result.risk_score}<br>
+                    Recommendation: ${result.recommendation}<br>
+                    Flags: ${result.fraud_flags ? result.fraud_flags.join(', ') : 'None'}<br>
+                    Details: ${JSON.stringify(result.details, null, 2)}
+                `;
+                element.className = `result ${riskClass}`;
+            }
+        }
+
+        async function testEmail() {
+            const email = document.getElementById('email').value;
+            const result = await makeRequest('/api/check', {
+                email: email,
+                bin: '411111',
+                ip: '8.8.8.8',
+                userAgent: navigator.userAgent,
+                deviceInfo: {
+                    platform: navigator.platform,
+                    screen: { width: screen.width, height: screen.height },
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            });
+            displayResult('email-result', result, 'Email Test');
+        }
+
+        async function testBin() {
+            const bin = document.getElementById('bin').value;
+            const result = await makeRequest('/api/check', {
+                email: 'test@example.com',
+                bin: bin,
+                ip: '8.8.8.8',
+                userAgent: navigator.userAgent,
+                deviceInfo: {
+                    platform: navigator.platform,
+                    screen: { width: screen.width, height: screen.height },
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            });
+            displayResult('bin-result', result, 'BIN Test');
+        }
+
+        async function testGeo() {
+            const ip = document.getElementById('ip').value;
+            const result = await makeRequest('/api/check', {
+                email: 'test@example.com',
+                bin: '411111',
+                ip: ip,
+                userAgent: navigator.userAgent,
+                deviceInfo: {
+                    platform: navigator.platform,
+                    screen: { width: screen.width, height: screen.height },
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            });
+            displayResult('geo-result', result, 'Geo Test');
+        }
+
+        async function testDevice() {
+            const userAgent = document.getElementById('userAgent').value || navigator.userAgent;
+            const result = await makeRequest('/api/check', {
+                email: 'test@example.com',
+                bin: '411111',
+                ip: '8.8.8.8',
+                userAgent: userAgent,
+                deviceInfo: {
+                    platform: navigator.platform,
+                    screen: { width: screen.width, height: screen.height },
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            });
+            displayResult('device-result', result, 'Device Test');
+        }
+
+        async function testFullCheck() {
+            const result = await makeRequest('/api/check', {
+                email: 'test@example.com',
+                bin: '411111',
+                ip: '8.8.8.8',
+                userAgent: navigator.userAgent,
+                deviceInfo: {
+                    platform: navigator.platform,
+                    screen: { width: screen.width, height: screen.height },
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            });
+            displayResult('full-result', result, 'Full Check');
+        }
+
+        // Заполняем поля по умолчанию
+        document.getElementById('email').value = 'test@example.com';
+        document.getElementById('bin').value = '411111';
+        document.getElementById('ip').value = '8.8.8.8';
+        document.getElementById('userAgent').value = navigator.userAgent;
+    </script>
+</body>
+</html>
